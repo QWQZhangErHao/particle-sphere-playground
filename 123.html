@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>粒子球 · 稳定优化版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #080610;
+            font-family: 'Segoe UI', system-ui, sans-serif
+        }
+
+        canvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%
+        }
+
+        #cam {
+            position: fixed;
+            width: 0;
+            height: 0;
+            opacity: 0
+        }
+
+        #pw {
+            position: fixed;
+            right: 12px;
+            bottom: 12px;
+            width: 140px;
+            height: 105px;
+            border-radius: 8px;
+            overflow: hidden;
+            z-index: 7;
+            opacity: 0;
+            transition: opacity .4s;
+            border: 1px solid rgba(255, 255, 255, .05)
+        }
+
+        #pw.show {
+            opacity: 1
+        }
+
+        #pw video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            display: block
+        }
+
+        #pw canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            transform: scaleX(-1)
+        }
+
+        #tcCam {
+            position: fixed;
+            right: 12px;
+            bottom: 12px;
+            z-index: 8;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, .35);
+            border: 1px solid rgba(255, 255, 255, .05);
+            color: rgba(255, 255, 255, .3);
+            font-size: 13px;
+            cursor: pointer;
+            display: none;
+            text-align: center;
+            line-height: 32px
+        }
+
+        #st {
+            position: fixed;
+            top: 10px;
+            right: 12px;
+            z-index: 5;
+            font: 11px monospace;
+            color: rgba(255, 255, 255, .15);
+            text-align: right;
+            pointer-events: none;
+            line-height: 1.5
+        }
+
+        #hint {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            padding: 8px 18px;
+            background: rgba(0, 0, 0, .35);
+            border: 1px solid rgba(255, 255, 255, .04);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, .4);
+            font-size: 11px;
+            white-space: nowrap;
+            pointer-events: none;
+            transition: opacity .5s;
+            opacity: 1
+        }
+
+        #hint.fade {
+            opacity: 0
+        }
+
+        #ov {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at center, rgba(20, 10, 40, .55), rgba(5, 5, 15, .88));
+            backdrop-filter: blur(10px);
+            transition: opacity .5s
+        }
+
+        #ov.hide {
+            opacity: 0;
+            pointer-events: none
+        }
+
+        .card {
+            text-align: center;
+            padding: 32px 36px;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .05);
+            border-radius: 20px;
+            max-width: 380px;
+            width: 84%;
+            animation: in .5s ease
+        }
+
+        @keyframes in {
+            from {
+                opacity: 0;
+                transform: translateY(18px) scale(.97)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1)
+            }
+        }
+
+        .card h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f093fb, #f5576c, #4facfe, #43e97b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px
+        }
+
+        .card p {
+            color: rgba(255, 255, 255, .3);
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 18px
+        }
+
+        .btn-s {
+            padding: 10px 36px;
+            font-size: 13px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(245, 87, 108, .2)
+        }
+
+        .btn-s:hover {
+            transform: translateY(-1px) scale(1.02)
+        }
+
+        #ls {
+            display: none;
+            margin-top: 12px;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px
+        }
+
+        .sp {
+            width: 22px;
+            height: 22px;
+            border: 2px solid rgba(255, 255, 255, .04);
+            border-top-color: #f093fb;
+            border-radius: 50%;
+            animation: sp .7s linear infinite
+        }
+
+        @keyframes sp {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        #em {
+            display: none;
+            margin-top: 10px;
+            padding: 8px 12px;
+            color: #ff6b8a;
+            font-size: 11px;
+            background: rgba(255, 107, 138, .06);
+            border-radius: 8px;
+            line-height: 1.5
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="cv"></canvas>
+    <video id="cam" playsinline></video>
+    <div id="pw"><video id="camPv" playsinline autoplay></video><canvas id="skCv"></canvas></div>
+    <div id="tcCam">📷</div>
+    <div id="st">启动…</div>
+    <div id="hint">🖐 手掌控制 · 🖱 滚轮调距</div>
+    <div id="ov">
+        <div class="card">
+            <h1>✦ 粒子球 · 稳定版</h1>
+            <p>5000 粒子 · GPU 着色器 · Worker 手势<br>位置控制 · 缩放光环</p>
+            <button class="btn-s" id="startBtn">🚀 启动</button>
+            <div id="ls">
+                <div class="sp"></div><span style="color:rgba(255,255,255,.3);font-size:11px" id="ll">准备…</span>
+            </div>
+            <div id="em"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js"
+        crossorigin></script>
+    <script
+        type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // Web Worker — 手势滤波 + 映射 (内联 blob)
+        // 增加 silent 标志，防止释放手势后的延迟消息干扰
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        const WCODE = `
+const DZ_POS=0.003, DZ_SCALE=0.015, DAMP=0.92;
+let gs = { a:false, rs:0, rsc:1, rcx:0, rcy:0, rry:0, rrx:0, baseHandSize:1 };
+let fRX = { pv:null, pd:null, pt:null }, fRY = { pv:null, pd:null, pt:null }, fS = { pv:null, pd:null, pt:null };
+let lastUpd=0, idleOmega=0;
+let silent = true;   // 初始静默，等待 rst 激活
+
+function filt(f, v, t){
+  if(f.pv===null){ f.pv=v; f.pd=0; f.pt=t; return v; }
+  const dt=(t-f.pt)/1000; if(dt<=0) return f.pv;
+  const dv=(v-f.pv)/dt, aD=1/(1+1/(6.28*1)/dt), fd=f.pd+aD*(dv-f.pd);
+  const fc=1.8+0.005*Math.abs(fd), a=1/(1+1/(6.28*fc)/dt), fv=f.pv+a*(v-f.pv);
+  f.pv=fv; f.pd=fd; f.pt=t; return fv;
+}
+function filtS(f, v, t){
+  if(f.pv===null){ f.pv=v; f.pd=0; f.pt=t; return v; }
+  const dt=(t-f.pt)/1000; if(dt<=0) return f.pv;
+  const dv=(v-f.pv)/dt, aD=1/(1+1/(6.28*1)/dt), fd=f.pd+aD*(dv-f.pd);
+  const fc=0.9+0.01*Math.abs(fd), a=1/(1+1/(6.28*fc)/dt), fv=f.pv+a*(v-f.pv);
+  f.pv=fv; f.pd=fd; f.pt=t; return fv;
+}
+function rst(f, v, t){ f.pv=v; f.pd=0; f.pt=t; }
+
+onmessage = function(e){
+  const d = e.data;
+
+  // 释放手势：进入静默状态，不再发送任何控制数据
+  if(d.t === 'release'){
+    silent = true;
+    gs.a = false;
+    postMessage({ a:false, io:0 });
+    return;
+  }
+
+  // 激活/重置手势：解除静默，校准基准
+  if(d.t === 'rst'){
+    silent = false;
+    gs = { a:true, rs:d.rs, rsc:d.rsc, rcx:d.cx, rcy:d.cy, rry:d.ry, rrx:d.rx, baseHandSize:d.bh };
+    rst(fRX, d.cx, d.nw); rst(fRY, d.cy, d.nw); rst(fS, d.rs, d.nw);
+    lastUpd = d.nw;
+    idleOmega = 0;
+    return;
+  }
+
+  // 当前处于静默状态，直接丢弃帧
+  if(silent) return;
+
+  if(!d.lm || d.lm.length < 63){
+    gs.a = false;
+    postMessage({ a:false, io:0 });
+    return;
+  }
+
+  const cx = d.lm[0], cy = d.lm[1];
+  const px12 = d.lm[36], py12 = d.lm[37];
+  const sp = Math.hypot(px12 - cx, py12 - cy) / gs.baseHandSize;
+  const nw = d.nw, dt = Math.min(0.1, (nw - lastUpd)/1000);
+  lastUpd = nw;
+
+  const fcx = filt(fRX, cx, nw), fcy = filt(fRY, cy, nw), fsp = filtS(fS, sp, nw);
+
+  // 缩放: 位置映射
+  let sc = gs.rsc;
+  const sr = fsp / gs.rs;
+  if(Math.abs(sr - 1) > DZ_SCALE) sc = gs.rsc * Math.pow(sr, 1.8);
+  sc = Math.max(0.15, Math.min(8, sc));
+
+  // 旋转: 位置映射 (死区作减法)
+  const dX = fcx - gs.rcx, dY = fcy - gs.rcy;
+  const dXEff = Math.abs(dX) > DZ_POS ? (dX - Math.sign(dX) * DZ_POS) : 0;
+  const dYEff = Math.abs(dY) > DZ_POS ? (dY - Math.sign(dY) * DZ_POS) : 0;
+  let ry = gs.rry + dXEff * 4.0;
+  let rx = gs.rrx + dYEff * 2.5;
+  rx = Math.max(-1.5, Math.min(1.5, rx));
+
+  // 惯性速度
+  if(gs.a) idleOmega = dXEff * 4.0;
+
+  postMessage({ a:true, sc, ry, rx, io:idleOmega });
+};
+`;
+        const wBlob = new Blob([WCODE], { type: 'application/javascript' });
+        const worker = new Worker(URL.createObjectURL(wBlob));
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // DOM 元素
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        const $ = id => document.getElementById(id);
+        const canvas = $('cv'), st = $('st'), hint = $('hint'), ov = $('ov'), sb = $('startBtn');
+        const ls = $('ls'), ll = $('ll'), em = $('em'), tc = $('tcCam'), pw = $('pw');
+        const cam = $('cam'), camPv = $('camPv'), skCv = $('skCv'), skC = skCv.getContext('2d');
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 全局状态
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        let rotY = 0, rotX = 0, scaleV = 1, autoRotY = 0, camDist = 7.5;
+        let ptCount = 5000;
+        const MIN_PARTICLES = 2000, MAX_PARTICLES = 10000;
+        let fc = 0, fps = 60, fpsT = 0;
+        let prevL = null, wasO = false;
+        const R = 2.8;
+        let scene, cam3d, renderer, ps, geo;
+        let handModel, camera;
+        const grp = new THREE.Group();
+        let ringLine = null, ringMat = null;
+
+        let gs = { a: false };
+        let ht = null, lastFrame = 0, idleOmega = 0;
+        const CONFIRM_FRAMES = 2, DAMP = 0.92, AUTO_SPIN = 0.002, DEF_SCALE = 1.0;
+        let confirmCnt = 0;
+        let prevScale = 1, prevRotY = 0, prevRotX = 0;
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // Three.js 初始化
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function initTHREE() {
+            renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0);
+            scene = new THREE.Scene();
+            cam3d = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 50);
+            cam3d.position.set(0, 0, camDist);
+            cam3d.lookAt(0, 0, 0);
+
+            // 创建粒子几何体
+            const total = ptCount;
+            const pos = new Float32Array(total * 3);
+            const hueOff = new Float32Array(total);
+            const sizes = new Float32Array(total);
+
+            for (let i = 0; i < ptCount; i++) {
+                const t = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = R * (0.92 + Math.random() * 0.08);
+                pos[i * 3] = r * Math.sin(phi) * Math.cos(t);
+                pos[i * 3 + 1] = r * Math.cos(phi);
+                pos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(t);
+                hueOff[i] = (Math.atan2(pos[i * 3 + 2], pos[i * 3]) / Math.PI * 180 + phi * 30) * 0.01745;
+                sizes[i] = 0.6 + Math.random() * 0.6;
+            }
+
+            geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            geo.setAttribute('hueOff', new THREE.BufferAttribute(hueOff, 1));
+            geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+            // 自定义着色器材料 —— 使用 GLSL1 兼容语法
+            const mat = new THREE.ShaderMaterial({
+                glslVersion: THREE.GLSL1,
+                uniforms: {
+                    uTime: { value: 0 },
+                    uScale: { value: 1 },
+                    uActive: { value: 0 },
+                },
+                vertexShader: `
+    attribute vec3 position;
+    attribute float hueOff;
+    attribute float size;
+    uniform mat4 modelViewMatrix;
+    uniform mat4 projectionMatrix;
+    uniform float uTime;
+    uniform float uScale;
+    uniform float uActive;
+    varying vec3 vCol;
+    void main(){
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize = max(1.0, size * (300.0 / -mv.z) * uScale * 0.6);
+      // 在顶点着色器中计算颜色 (GPU 并行)
+      float hue = mod(hueOff * 57.3 + uTime * 120.0, 360.0);
+      float sat = min(0.85 * (1.0 + 0.15 * uActive), 1.0);
+      float val = 0.65 + 0.15 * sin(position.x * 0.5 + position.y * 0.3 + uTime * 2.0);
+      float H = hue / 60.0;
+      float hi = floor(H);
+      float ff = H - hi;
+      float p = val * (1.0 - sat);
+      float q = val * (1.0 - sat * ff);
+      float t = val * (1.0 - sat * (1.0 - ff));
+      if(hi < 0.5) vCol = vec3(val, t, p);
+      else if(hi < 1.5) vCol = vec3(q, val, p);
+      else if(hi < 2.5) vCol = vec3(p, val, t);
+      else if(hi < 3.5) vCol = vec3(p, q, val);
+      else if(hi < 4.5) vCol = vec3(t, p, val);
+      else vCol = vec3(val, p, q);
+      float warm = clamp((uScale - 0.3) / 7.7, 0.0, 1.0) * 0.15;
+      vCol += warm * vec3(0.3, 0.1, -0.2);
+    }`,
+                fragmentShader: `
+    precision highp float;
+    varying vec3 vCol;
+    void main(){
+      vec2 d = gl_PointCoord - 0.5;
+      float r = length(d);
+      if(r > 0.5) discard;
+      float core = 1.0 - smoothstep(0.0, 0.4, r);
+      float glow = exp(-r * 6.0) * 0.5;
+      float a = max(core, glow) * 0.92;
+      gl_FragColor = vec4(vCol, a);
+    }`,
+                transparent: true,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending,
+            });
+
+            ps = new THREE.Points(geo, mat);
+            grp.add(ps);
+            scene.add(grp);
+
+            // 缩放光环
+            const ringPts = [];
+            for (let i = 0; i <= 64; i++) {
+                const a = i / 64 * Math.PI * 2;
+                ringPts.push(Math.cos(a) * (R * 1.2), 0, Math.sin(a) * (R * 1.2));
+            }
+            const rGeo = new THREE.BufferGeometry();
+            rGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(ringPts), 3));
+            ringMat = new THREE.LineBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.3 });
+            ringLine = new THREE.Line(rGeo, ringMat);
+            grp.add(ringLine);
+        }
+
+        // 更新 GPU 统一变量
+        function updGPU(dt, active) {
+            const m = ps.material;
+            m.uniforms.uTime.value += dt;
+            m.uniforms.uScale.value = scaleV;
+            m.uniforms.uActive.value = active ? 1 : 0;
+
+            if (ringLine) {
+                const s = scaleV;
+                ringLine.scale.set(s, s, s);
+                const hue = 240 + Math.min(120, (s - 0.3) / 7.7 * 120);
+                ringMat.color.setHSL(hue / 360, 0.8, 0.5);
+                ringMat.opacity = 0.15 + 0.25 * Math.min(1, (s - 0.3) / 7.7);
+            }
+        }
+
+        // 动态调整粒子数量
+        function adjust() {
+            if (fps < 50 && ptCount > MIN_PARTICLES) {
+                ptCount = Math.max(MIN_PARTICLES, ptCount - 500);
+                rebuild();
+            } else if (fps > 58 && ptCount < MAX_PARTICLES) {
+                ptCount = Math.min(MAX_PARTICLES, ptCount + 500);
+                rebuild();
+            }
+        }
+        function rebuild() {
+            const total = ptCount;
+            const pos = new Float32Array(total * 3);
+            const hueOff = new Float32Array(total);
+            const sz = new Float32Array(total);
+            for (let i = 0; i < ptCount; i++) {
+                const t = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = R * (0.92 + Math.random() * 0.08);
+                pos[i * 3] = r * Math.sin(phi) * Math.cos(t);
+                pos[i * 3 + 1] = r * Math.cos(phi);
+                pos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(t);
+                hueOff[i] = (Math.atan2(pos[i * 3 + 2], pos[i * 3]) / Math.PI * 180 + phi * 30) * 0.01745;
+                sz[i] = 0.6 + Math.random() * 0.6;
+            }
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            geo.setAttribute('hueOff', new THREE.BufferAttribute(hueOff, 1));
+            geo.setAttribute('size', new THREE.BufferAttribute(sz, 1));
+            geo.setDrawRange(0, total);
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 手势识别与交互
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function isOpen(lm) {
+            let e = 0;
+            const ti = [8, 12, 16, 20], pi = [7, 11, 15, 19];
+            for (let i = 0; i < 4; i++) {
+                const d1 = Math.hypot(lm[ti[i]].x - lm[0].x, lm[ti[i]].y - lm[0].y);
+                const d2 = Math.hypot(lm[pi[i]].x - lm[0].x, lm[pi[i]].y - lm[0].y);
+                if (d1 > d2 * 1.06) e++;
+            }
+            let sp = 0;
+            for (let i = 0; i < 3; i++) sp += Math.hypot(lm[ti[i]].x - lm[ti[i + 1]].x, lm[ti[i]].y - lm[ti[i + 1]].y);
+            return e >= 3 && sp / 3 > 0.03;
+        }
+
+        worker.onmessage = function (e) {
+            const d = e.data;
+            if (!d.a) {
+                if (gs.a && wasO) wasO = false;
+                gs.a = false;
+                return;
+            }
+            scaleV = d.sc;
+            rotY = d.ry;
+            autoRotY = d.ry;
+            rotX = d.rx;
+            if (!gs.a) {
+                gs.a = true;
+                wasO = true;
+            }
+            idleOmega = d.io || 0;
+        };
+
+        function sendToWorker(lm, nw, start) {
+            const data = { nw };
+            if (start) {
+                const sp = Math.hypot(lm[12].x - lm[0].x, lm[12].y - lm[0].y);
+                data.t = 'rst';
+                data.cx = lm[0].x;
+                data.cy = lm[0].y;
+                data.rs = sp;
+                data.rsc = scaleV;
+                data.ry = rotY;
+                data.rx = rotX;
+                data.bh = sp;
+            } else {
+                const pts = new Float32Array(63);
+                for (let i = 0; i < 21; i++) {
+                    pts[i * 3] = lm[i].x;
+                    pts[i * 3 + 1] = lm[i].y;
+                    pts[i * 3 + 2] = lm[i].z;
+                }
+                data.lm = pts;
+            }
+            worker.postMessage(data);
+        }
+
+        function onH(r) {
+            const l = r.multiHandLandmarks || [];
+            // 手部消失时立即释放
+            if (!l.length) {
+                prevL = null;
+                if (wasO) {
+                    wasO = false;
+                    gs.a = false;
+                    worker.postMessage({ t: 'release' });
+                    setHint('🖐 张开手掌控制', 3000);
+                }
+                confirmCnt = 0;
+                return;
+            }
+
+            prevL = l[0];
+            const o = isOpen(l[0]);
+
+            if (o) {
+                confirmCnt = Math.min(confirmCnt + 1, CONFIRM_FRAMES + 1);
+            } else {
+                confirmCnt = Math.max(0, confirmCnt - 1);
+                if (wasO && confirmCnt === 0) {
+                    wasO = false;
+                    gs.a = false;
+                    worker.postMessage({ t: 'release' });
+                    setHint('🖐 张开手掌控制', 3000);
+                }
+                return;
+            }
+            if (confirmCnt < CONFIRM_FRAMES) return;
+
+            if (!gs.a) {
+                wasO = true;
+                sendToWorker(l[0], performance.now(), true);
+                gs.a = true;
+                setHint('🖐 位置控制 · 移动旋转', 0);
+            } else {
+                sendToWorker(l[0], performance.now(), false);
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 骨架预览
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        const SC = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [0, 9], [9, 10], [10, 11], [11, 12], [0, 13], [13, 14], [14, 15], [15, 16], [0, 17], [17, 18], [18, 19], [19, 20], [5, 9], [9, 13], [13, 17]];
+        function dS() {
+            const w = skCv.width, h = skCv.height;
+            skC.clearRect(0, 0, w, h);
+            if (!prevL) {
+                skC.fillStyle = 'rgba(255,255,255,0.25)';
+                skC.font = '13px system-ui';
+                skC.textAlign = 'center';
+                skC.fillText('等待手势...', w / 2, h / 2 - 4);
+                return;
+            }
+            const l = prevL;
+            for (const [i, j] of SC) {
+                skC.beginPath();
+                skC.moveTo(l[i].x * w, l[i].y * h);
+                skC.lineTo(l[j].x * w, l[j].y * h);
+                skC.strokeStyle = `hsla(${i * 12 + 200},90%,65%,0.5)`;
+                skC.lineWidth = 1.5;
+                skC.stroke();
+            }
+            for (let i = 0; i < 21; i++) {
+                const isTip = [4, 8, 12, 16, 20].includes(i);
+                skC.beginPath();
+                skC.arc(l[i].x * w, l[i].y * h, isTip ? 4 : 2.5, 0, Math.PI * 2);
+                skC.fillStyle = `hsl(${i * 13 + 200},90%,65%)`;
+                skC.fill();
+                if (isTip) {
+                    skC.beginPath();
+                    skC.arc(l[i].x * w, l[i].y * h, 1.5, 0, Math.PI * 2);
+                    skC.fillStyle = '#fff';
+                    skC.fill();
+                }
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // UI 辅助
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function setHint(t, d) {
+            hint.textContent = t;
+            hint.classList.remove('fade');
+            clearTimeout(ht);
+            if (d > 0) ht = setTimeout(() => hint.classList.add('fade'), d);
+        }
+        let cvis = false;
+        tc.addEventListener('click', () => {
+            cvis = !cvis;
+            pw.classList.toggle('show', cvis);
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'c') tc.click(); });
+        window.addEventListener('resize', () => {
+            if (renderer) {
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                if (cam3d) {
+                    cam3d.aspect = window.innerWidth / window.innerHeight;
+                    cam3d.updateProjectionMatrix();
+                }
+            }
+        });
+        window.addEventListener('wheel', e => {
+            e.preventDefault();
+            camDist = Math.max(2.5, Math.min(20, camDist + e.deltaY * 0.008));
+        }, { passive: false });
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 主渲染循环
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function animate(ts) {
+            fc++;
+            const dt = Math.min(0.05, (ts - lastFrame) / 1000 || 0.016);
+            lastFrame = ts;
+
+            if (fc % 30 === 0) {
+                const n = performance.now();
+                if (fpsT) fps = Math.round(30000 / (n - fpsT));
+                fpsT = n;
+                st.textContent = `${fps}FPS | ${ptCount} 粒`;
+                adjust();
+            }
+
+            // 释放后的自动旋转与惯性
+            if (!gs.a) {
+                if (Math.abs(idleOmega) > 0.001) {
+                    rotY += idleOmega * dt * 60;
+                    autoRotY = rotY;
+                    idleOmega *= Math.pow(DAMP, dt * 60);
+                } else {
+                    idleOmega = 0;
+                    autoRotY += AUTO_SPIN;
+                    rotY = autoRotY;
+                    rotX += 0.0003;
+                }
+                if (Math.abs(scaleV - DEF_SCALE) > 0.005) scaleV += (DEF_SCALE - scaleV) * 0.01;
+            }
+
+            const sDiff = Math.abs(scaleV - prevScale) / Math.max(prevScale, 0.01);
+            const rDiff = Math.abs(rotY - prevRotY) + Math.abs(rotX - prevRotX);
+            if (sDiff > 0.002 || rDiff > 0.002) {
+                grp.scale.set(scaleV, scaleV, scaleV);
+                grp.rotation.set(rotX * 0.35, rotY, 0);
+                prevScale = scaleV;
+                prevRotY = rotY;
+                prevRotX = rotX;
+            }
+
+            cam3d.position.z = camDist;
+            updGPU(dt, gs.a);
+            dS();
+            renderer.render(scene, cam3d);
+            requestAnimationFrame(animate);
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 启动按钮
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        sb.addEventListener('click', async () => {
+            sb.style.display = 'none';
+            ls.style.display = 'flex';
+            ll.textContent = '初始化 GPU…';
+            em.style.display = 'none';
+            try {
+                initTHREE();
+                ll.textContent = '手势模型…';
+                handModel = new Hands({
+                    locateFile: f => 'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/' + f
+                });
+                handModel.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.7,
+                    minTrackingConfidence: 0.5
+                });
+                handModel.onResults(onH);
+                camera = new Camera(cam, {
+                    onFrame: async () => { if (handModel) await handModel.send({ image: cam }); },
+                    width: 640,
+                    height: 480
+                });
+                await camera.start();
+                tc.style.display = 'block';
+                camPv.srcObject = cam.srcObject;
+                camPv.play();
+                pw.classList.add('show');
+                (function wv() {
+                    if (camPv.readyState >= 2) {
+                        skCv.width = camPv.videoWidth;
+                        skCv.height = camPv.videoHeight;
+                        dS();
+                    }
+                    if (!skCv.width) requestAnimationFrame(wv);
+                })();
+                ov.classList.add('hide');
+                setHint('🖐 手腕位置控制 · 🖱 滚轮调距', 4000);
+                fpsT = performance.now();
+                requestAnimationFrame(animate);
+            } catch (e) {
+                ls.style.display = 'none';
+                sb.style.display = 'block';
+                em.textContent = '❌ ' + (e.message || e);
+                em.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>

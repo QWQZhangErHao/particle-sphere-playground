@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>彩虹粒子球 · 物理质感版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #080610
+        }
+
+        canvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%
+        }
+
+        #cam {
+            position: fixed;
+            width: 0;
+            height: 0;
+            opacity: 0
+        }
+
+        #pw {
+            position: fixed;
+            right: 12px;
+            bottom: 12px;
+            width: 140px;
+            height: 105px;
+            border-radius: 8px;
+            overflow: hidden;
+            z-index: 7;
+            opacity: 0;
+            transition: opacity .4s;
+            border: 1px solid rgba(255, 255, 255, .05)
+        }
+
+        #pw.show {
+            opacity: 1
+        }
+
+        #pw video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            display: block
+        }
+
+        #pw canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            transform: scaleX(-1)
+        }
+
+        #tcCam {
+            position: fixed;
+            right: 12px;
+            bottom: 12px;
+            z-index: 8;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, .35);
+            border: 1px solid rgba(255, 255, 255, .05);
+            color: rgba(255, 255, 255, .3);
+            font-size: 13px;
+            cursor: pointer;
+            display: none;
+            text-align: center;
+            line-height: 32px
+        }
+
+        #st {
+            position: fixed;
+            top: 10px;
+            right: 12px;
+            z-index: 5;
+            font: 11px monospace;
+            color: rgba(255, 255, 255, .15);
+            text-align: right;
+            pointer-events: none;
+            line-height: 1.5
+        }
+
+        #hint {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            padding: 8px 18px;
+            background: rgba(0, 0, 0, .35);
+            border: 1px solid rgba(255, 255, 255, .04);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, .4);
+            font-size: 11px;
+            white-space: nowrap;
+            pointer-events: none;
+            transition: opacity .5s;
+            opacity: 1
+        }
+
+        #hint.fade {
+            opacity: 0
+        }
+
+        #ov {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at center, rgba(20, 10, 40, .55), rgba(5, 5, 15, .88));
+            backdrop-filter: blur(10px);
+            transition: opacity .5s
+        }
+
+        #ov.hide {
+            opacity: 0;
+            pointer-events: none
+        }
+
+        .card {
+            text-align: center;
+            padding: 32px 36px;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .05);
+            border-radius: 20px;
+            max-width: 380px;
+            width: 84%;
+            animation: in .5s ease
+        }
+
+        @keyframes in {
+            from {
+                opacity: 0;
+                transform: translateY(18px) scale(.97)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1)
+            }
+        }
+
+        .card h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f093fb, #f5576c, #4facfe, #43e97b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px
+        }
+
+        .card p {
+            color: rgba(255, 255, 255, .3);
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 18px
+        }
+
+        .btn-s {
+            padding: 10px 36px;
+            font-size: 13px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(245, 87, 108, .2)
+        }
+
+        .btn-s:hover {
+            transform: translateY(-1px) scale(1.02)
+        }
+
+        #ls {
+            display: none;
+            margin-top: 12px;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px
+        }
+
+        .sp {
+            width: 22px;
+            height: 22px;
+            border: 2px solid rgba(255, 255, 255, .04);
+            border-top-color: #f093fb;
+            border-radius: 50%;
+            animation: sp .7s linear infinite
+        }
+
+        @keyframes sp {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        #em {
+            display: none;
+            margin-top: 10px;
+            padding: 8px 12px;
+            color: #ff6b8a;
+            font-size: 11px;
+            background: rgba(255, 107, 138, .06);
+            border-radius: 8px;
+            line-height: 1.5
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="cv"></canvas>
+    <video id="cam" playsinline></video>
+    <div id="pw"><video id="camPv" playsinline autoplay></video><canvas id="skCv"></canvas></div>
+    <div id="tcCam">📷</div>
+    <div id="st">启动…</div>
+    <div id="hint">🖐 手掌控制 · 🖱 滚轮调距</div>
+    <div id="ov">
+        <div class="card">
+            <h1>✦ 彩虹粒子球</h1>
+            <p>8000 粒子 · 动态灵敏度 · 物理惯性<br>弹簧缩放 · 速度自适应旋转</p>
+            <button class="btn-s" id="startBtn">🚀 启动</button>
+            <div id="ls">
+                <div class="sp"></div><span style="color:rgba(255,255,255,.3);font-size:11px" id="ll">准备…</span>
+            </div>
+            <div id="em"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js"
+        crossorigin></script>
+    <script
+        type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        const $ = id => document.getElementById(id);
+        const P = Math;
+
+        // ── 1€ 滤波器（保留滤波器导数用于速度估计） ──
+        class EF {
+            constructor(m, b, d) { this.m = m; this.b = b; this.d = d; this.pv = null; this.pd = null; this.pt = null; }
+            f(v, t) {
+                if (this.pv === null) { this.pv = v; this.pd = 0; this.pt = t; return v; }
+                const dt = (t - this.pt) / 1000; if (dt <= 0) return this.pv;
+                const dv = (v - this.pv) / dt, aD = 1 / (1 + 1 / (6.28 * this.d) / dt), fd = this.pd + aD * (dv - this.pd);
+                const fc = this.m + this.b * P.abs(fd), a = 1 / (1 + 1 / (6.28 * fc) / dt), fv = this.pv + a * (v - this.pv);
+                this.pv = fv; this.pd = fd; this.pt = t; return fv;
+            }
+            r(v, t) { this.pv = v; this.pd = 0; this.pt = t; return v; }
+            get velocity() { return this.pd; }
+        }
+
+        // DOM 引用
+        const canvas = $('cv'), st = $('st'), hint = $('hint'), ov = $('ov'), sb = $('startBtn');
+        const ls = $('ls'), ll = $('ll'), em = $('em'), tc = $('tcCam'), pw = $('pw');
+        const cam = $('cam'), camPv = $('camPv'), skCv = $('skCv'), skC = skCv.getContext('2d');
+
+        // ── 状态变量 ──
+        let rotY = 0, rotX = 0, scaleV = 1, autoRotY = 0, camDist = 7.5;
+        const R = 2.8;
+        let ptCount = 8000, fps = 60, frameCount = 0, fpsTime = 0;
+        let prevL = null, wasO = false;
+        let handModel, camera;
+        const grp = new THREE.Group();
+
+        // 手势状态机
+        let confirmOpen = 0, confirmClose = 0;
+        const CONFIRM_FRAMES = 2;
+
+        // 控制参数
+        let gs = { a: false, rs: 0, rsc: 1, rcx: 0, rcy: 0, rry: 0, rrx: 0, baseHandSize: 1 };
+        const fX = new EF(1.8, 0.005, 1), fY = new EF(1.8, 0.005, 1), fS = new EF(0.9, 0.01, 1);
+        let ht, lastUpd = 0;
+
+        // 惯性物理参数 (质量-弹簧-阻尼)
+        const SPRING_K = 5.0;   // 弹簧系数 (回归力度)
+        const SPRING_C = 3.0;   // 阻尼系数
+        let inertiaY = 0, inertiaX = 0;      // 旋转惯性角速度
+        let scaleVelocity = 0;               // 缩放速度
+        let releaseTimer = 0;
+
+        // 视觉元素
+        let cursorRing, ringMaterial, scaleRing, scaleRingMat;
+        let breathPhase = 0;
+
+        // Three.js 对象
+        let scene, cam3d, renderer, particleSystem, geo, colorAttr, huesArr;
+
+        // ── 初始化 Three.js ──
+        function initThree() {
+            renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            renderer.setPixelRatio(P.min(window.devicePixelRatio, 2));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0);
+            scene = new THREE.Scene();
+            cam3d = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 50);
+            cam3d.position.set(0, 0, camDist);
+            cam3d.lookAt(0, 0, 0);
+
+            buildGeometry(ptCount);
+
+            const c = document.createElement('canvas'); c.width = 32; c.height = 32;
+            const ctx = c.getContext('2d');
+            const g = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+            g.addColorStop(0, 'rgba(255,255,255,1)');
+            g.addColorStop(0.5, 'rgba(255,255,255,0.7)');
+            g.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, 32, 32);
+            const tex = new THREE.CanvasTexture(c);
+
+            const mat = new THREE.PointsMaterial({
+                size: 0.12, map: tex, blending: THREE.AdditiveBlending,
+                depthWrite: false, vertexColors: true, transparent: true, opacity: 0.92
+            });
+            particleSystem = new THREE.Points(geo, mat);
+            grp.add(particleSystem);
+
+            // 手部光标
+            const cursorGeo = new THREE.RingGeometry(0.25, 0.35, 48);
+            ringMaterial = new THREE.MeshBasicMaterial({
+                color: 0x3399ff, side: THREE.DoubleSide,
+                transparent: true, opacity: 0.4, depthTest: false, depthWrite: false
+            });
+            cursorRing = new THREE.Mesh(cursorGeo, ringMaterial);
+            cursorRing.rotation.x = -P.PI / 2;
+            cursorRing.visible = false;
+            grp.add(cursorRing);
+
+            // 缩放光环
+            const scaleRingGeo = new THREE.RingGeometry(R * 1.15 - 0.02, R * 1.15 + 0.02, 64);
+            scaleRingMat = new THREE.MeshBasicMaterial({
+                color: 0x4488ff, side: THREE.DoubleSide,
+                transparent: true, opacity: 0.25, depthTest: false, depthWrite: false
+            });
+            scaleRing = new THREE.Mesh(scaleRingGeo, scaleRingMat);
+            scaleRing.rotation.x = -P.PI / 2;
+            grp.add(scaleRing);
+
+            scene.add(grp);
+        }
+
+        function buildGeometry(count) {
+            geo = new THREE.BufferGeometry();
+            const pos = new Float32Array(count * 3);
+            const cols = new Float32Array(count * 3);
+            huesArr = new Float32Array(count);
+            for (let i = 0; i < count; i++) {
+                const theta = P.random() * P.PI * 2, phi = P.acos(2 * P.random() - 1), r = R * (0.92 + P.random() * 0.08);
+                pos[i * 3] = r * P.sin(phi) * P.cos(theta);
+                pos[i * 3 + 1] = r * P.cos(phi);
+                pos[i * 3 + 2] = r * P.sin(phi) * P.sin(theta);
+                huesArr[i] = (P.atan2(pos[i * 3 + 2], pos[i * 3]) / P.PI * 180 + phi * 30) % 360;
+            }
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+            colorAttr = geo.attributes.color;
+        }
+
+        let timeAcc = 0;
+        function updateColors(dt) {
+            const colors = colorAttr.array;
+            timeAcc += dt * 0.02;
+            const warmShift = gs.a ? P.min(15, (scaleV - 1) * 10) : 0;
+            for (let i = 0; i < ptCount; i++) {
+                const hue = (huesArr[i] + timeAcc * 120 + warmShift) % 360;
+                const sat = gs.a ? 0.95 : 0.85;
+                const [r, g, b] = hsv2rgb(hue, sat, 0.7);
+                colors[i * 3] = r / 255; colors[i * 3 + 1] = g / 255; colors[i * 3 + 2] = b / 255;
+            }
+            colorAttr.needsUpdate = true;
+        }
+
+        function hsv2rgb(h, s, v) {
+            h = ((h % 360) + 360) % 360;
+            const f = h / 60, hi = P.floor(f) % 6, ff = f - P.floor(f);
+            const p = v * (1 - s), q = v * (1 - s * ff), t = v * (1 - s * (1 - ff));
+            let r, g, b;
+            if (hi === 0) { r = v; g = t; b = p }
+            else if (hi === 1) { r = q; g = v; b = p }
+            else if (hi === 2) { r = p; g = v; b = t }
+            else if (hi === 3) { r = p; g = q; b = v }
+            else if (hi === 4) { r = t; g = p; b = v }
+            else { r = v; g = p; b = q }
+            return [P.floor(r * 255), P.floor(g * 255), P.floor(b * 255)];
+        }
+
+        function adjustCount() {
+            if (fps < 45 && ptCount > 3000) { ptCount = P.max(3000, ptCount - 1000); rebuild(); }
+            else if (fps > 55 && ptCount < 12000) { ptCount = P.min(12000, ptCount + 1000); rebuild(); }
+        }
+        function rebuild() { buildGeometry(ptCount); particleSystem.geometry = geo; }
+
+        // ── 手势识别 ──
+        function isOpen(lm) {
+            let e = 0, sp = 0;
+            const ti = [8, 12, 16, 20], pi = [7, 11, 15, 19];
+            for (let i = 0; i < 4; i++) {
+                const d1 = P.hypot(lm[ti[i]].x - lm[0].x, lm[ti[i]].y - lm[0].y);
+                const d2 = P.hypot(lm[pi[i]].x - lm[0].x, lm[pi[i]].y - lm[0].y);
+                if (d1 > d2 * 1.06) e++;
+            }
+            for (let i = 0; i < 3; i++)sp += P.hypot(lm[ti[i]].x - lm[ti[i + 1]].x, lm[ti[i]].y - lm[ti[i + 1]].y);
+            return e >= 3 && sp / 3 > 0.03;
+        }
+
+        function onHands(results) {
+            const l = results.multiHandLandmarks || [];
+            if (!l.length) {
+                prevL = null;
+                confirmOpen = 0; confirmClose = P.min(confirmClose + 1, CONFIRM_FRAMES);
+                if (confirmClose >= CONFIRM_FRAMES && wasO) {
+                    wasO = false; gs.a = false;
+                    releaseInertia();
+                    setHint('🖐 张开手掌控制', 3000);
+                }
+                return;
+            }
+            prevL = l[0];
+            const open = isOpen(l[0]);
+
+            if (open) {
+                confirmClose = 0;
+                confirmOpen = P.min(confirmOpen + 1, CONFIRM_FRAMES);
+            } else {
+                confirmOpen = 0;
+                confirmClose = P.min(confirmClose + 1, CONFIRM_FRAMES);
+                if (confirmClose >= CONFIRM_FRAMES && wasO) {
+                    wasO = false; gs.a = false;
+                    releaseInertia();
+                    setHint('🖐 张开手掌控制', 3000);
+                }
+                return;
+            }
+
+            if (confirmOpen < CONFIRM_FRAMES) return;
+
+            const cx = l[0][0].x, cy = l[0][0].y;
+            const sp = P.hypot(l[0][12].x - l[0][0].x, l[0][12].y - l[0][0].y);
+            const nw = performance.now();
+
+            if (!gs.a) {
+                gs.a = true; wasO = true;
+                gs.baseHandSize = sp;
+                gs.rs = sp / gs.baseHandSize; gs.rsc = scaleV;
+                gs.rcx = cx; gs.rcy = cy;
+                gs.rry = autoRotY; gs.rrx = rotX;
+                fS.r(sp / gs.baseHandSize, nw); fX.r(cx, nw); fY.r(cy, nw);
+                lastUpd = nw;
+                setHint('🖐 控制中', 0);
+                cursorRing.visible = true;
+            } else {
+                const dt = P.min(0.1, (nw - lastUpd) / 1000); if (dt <= 0) return; lastUpd = nw;
+                const fs = fS.f(sp / gs.baseHandSize, nw);
+                const fcx = fX.f(cx, nw), fcy = fY.f(cy, nw);
+
+                // --- 动态控制-显示比 (基于手部速度) ---
+                const speedX = P.abs(fX.velocity);
+                const dynamicGainX = 4.0 * (1 + 0.6 * P.min(1, speedX * 20));
+                const speedY = P.abs(fY.velocity);
+                const dynamicGainY = 2.5 * (1 + 0.6 * P.min(1, speedY * 20));
+
+                // 缩放映射 (1.0 附近保持线性，两端幂映射)
+                const sRatio = fs / gs.rs;
+                let scaleTarget = gs.rsc;
+                if (P.abs(sRatio - 1) > 0.015) {
+                    const sign = P.sign(sRatio - 1);
+                    const dev = P.abs(sRatio - 1) - 0.015;
+                    scaleTarget = gs.rsc * P.pow(1 + sign * dev * 1.2, 1.8);
+                }
+                scaleV = P.max(0.15, P.min(8, scaleTarget));
+
+                const dx = fcx - gs.rcx, dy = fcy - gs.rcy;
+                const dXEff = P.abs(dx) > 0.003 ? (dx - P.sign(dx) * 0.003) : 0;
+                const dYEff = P.abs(dy) > 0.003 ? (dy - P.sign(dy) * 0.003) : 0;
+                rotY = gs.rry + dXEff * dynamicGainX;
+                rotX = P.max(-1.5, P.min(1.5, gs.rrx + dYEff * dynamicGainY));
+                autoRotY = rotY;
+
+                // 更新光标位置
+                cursorRing.position.set(dXEff * 10, -dYEff * 10, 0);
+                const cursorHue = 200 + P.min(160, (scaleV - 0.3) / 7.7 * 160);
+                ringMaterial.color.setHSL(cursorHue / 360, 0.9, 0.6);
+            }
+
+            // 缩放极限光环闪烁
+            if (scaleV < 0.3 || scaleV > 7.5) {
+                scaleRingMat.opacity = 0.4 + 0.3 * P.sin(nw * 0.03);
+            } else {
+                scaleRingMat.opacity = 0.2;
+            }
+            scaleRing.scale.set(scaleV, scaleV, scaleV);
+        }
+
+        // ── 释放惯性：质量-弹簧-阻尼模型 ──
+        function releaseInertia() {
+            // 记录释放瞬间的速度
+            inertiaY = fX.velocity * 4.0;   // 旋转惯性角速度
+            inertiaX = fY.velocity * 2.5;
+            scaleVelocity = fS.velocity;     // 缩放速度 (来自滤波后的手掌尺寸变化率)
+            releaseTimer = 0.5;              // 惯性持续时间
+            cursorRing.visible = false;
+        }
+
+        // 骨架绘制
+        const SC = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [0, 9], [9, 10], [10, 11], [11, 12], [0, 13], [13, 14], [14, 15], [15, 16], [0, 17], [17, 18], [18, 19], [19, 20], [5, 9], [9, 13], [13, 17]];
+        function drawSkeleton() {
+            const w = skCv.width, h = skCv.height;
+            skC.clearRect(0, 0, w, h);
+            if (!prevL) {
+                skC.fillStyle = 'rgba(255,255,255,0.25)'; skC.font = '13px system-ui';
+                skC.textAlign = 'center'; skC.fillText('等待手势...', w / 2, h / 2 - 4);
+                return;
+            }
+            const l = prevL;
+            for (const [i, j] of SC) {
+                skC.beginPath(); skC.moveTo(l[i].x * w, l[i].y * h); skC.lineTo(l[j].x * w, l[j].y * h);
+                skC.strokeStyle = `hsla(${i * 12 + 200},90%,65%,0.5)`; skC.lineWidth = 1.5; skC.stroke();
+            }
+            for (let i = 0; i < 21; i++) {
+                const tip = [4, 8, 12, 16, 20].includes(i);
+                skC.beginPath(); skC.arc(l[i].x * w, l[i].y * h, tip ? 4 : 2.5, 0, P.PI * 2);
+                skC.fillStyle = `hsl(${i * 13 + 200},90%,65%)`; skC.fill();
+                if (tip) { skC.beginPath(); skC.arc(l[i].x * w, l[i].y * h, 1.5, 0, P.PI * 2); skC.fillStyle = '#fff'; skC.fill(); }
+            }
+        }
+
+        function setHint(t, d) { hint.textContent = t; hint.classList.remove('fade'); clearTimeout(ht); if (d > 0) ht = setTimeout(() => hint.classList.add('fade'), d); }
+        let camVis = false;
+        tc.addEventListener('click', () => { camVis = !camVis; pw.classList.toggle('show', camVis); });
+        document.addEventListener('keydown', e => { if (e.key === 'c') tc.click(); });
+        window.addEventListener('resize', () => {
+            if (renderer) { renderer.setSize(window.innerWidth, window.innerHeight); cam3d.aspect = window.innerWidth / window.innerHeight; cam3d.updateProjectionMatrix(); }
+        });
+        window.addEventListener('wheel', e => { e.preventDefault(); camDist = P.max(2.5, P.min(20, camDist + e.deltaY * 0.008)); }, { passive: false });
+
+        let lastFrame = 0;
+        function animate(ts) {
+            frameCount++;
+            const dt = P.min(0.05, (ts - lastFrame) / 1000 || 0.016); lastFrame = ts;
+
+            if (frameCount % 30 === 0) {
+                const n = performance.now();
+                if (fpsTime) fps = P.round(30000 / (n - fpsTime));
+                fpsTime = n; st.textContent = `${fps}FPS | ${ptCount}粒`;
+                adjustCount();
+            }
+
+            // 无手势时：物理惯性模拟
+            if (!gs.a) {
+                if (releaseTimer > 0) {
+                    releaseTimer -= dt;
+                    // 旋转惯性 (欧拉法)
+                    rotY += inertiaY * dt;
+                    rotX += inertiaX * dt;
+                    inertiaY *= P.pow(0.92, dt * 60); // 简单阻尼，与弹簧配合
+                    inertiaX *= P.pow(0.92, dt * 60);
+
+                    // 缩放惯性 + 弹簧回归
+                    scaleVelocity += (SPRING_K * (1.0 - scaleV) - SPRING_C * scaleVelocity) * dt;
+                    scaleV += scaleVelocity * dt;
+                    // 限制边界
+                    scaleV = P.max(0.15, P.min(8, scaleV));
+                } else {
+                    // 惯性结束后，保持自动旋转和呼吸效果
+                    autoRotY += 0.004;
+                    rotY = autoRotY;
+                    rotX += 0.0003;
+                    breathPhase += dt * 1.0;
+                    scaleV = 1.0 + 0.05 * P.sin(breathPhase);
+                    scaleVelocity = 0;
+                }
+            } else {
+                // 手势控制中，重置呼吸相位
+                breathPhase = 0;
+            }
+
+            grp.rotation.set(rotX * 0.35, rotY, 0);
+            grp.scale.set(scaleV, scaleV, scaleV);
+            cam3d.position.z = camDist;
+
+            updateColors(dt);
+            drawSkeleton();
+            renderer.render(scene, cam3d);
+            requestAnimationFrame(animate);
+        }
+
+        // 启动按钮
+        sb.addEventListener('click', async () => {
+            sb.style.display = 'none'; ls.style.display = 'flex'; ll.textContent = '初始化 GPU…'; em.style.display = 'none';
+            try {
+                initThree();
+                requestAnimationFrame(animate);
+                ov.classList.add('hide');
+                ll.textContent = '加载手势…';
+                handModel = new Hands({ locateFile: f => 'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/' + f });
+                handModel.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.5 });
+                handModel.onResults(onHands);
+                camera = new Camera(cam, { onFrame: async () => { if (handModel) await handModel.send({ image: cam }); }, width: 640, height: 480 });
+                await camera.start();
+                tc.style.display = 'block'; camPv.srcObject = cam.srcObject; camPv.play(); pw.classList.add('show');
+                const waitVideo = () => {
+                    if (camPv.readyState >= 2) { skCv.width = camPv.videoWidth; skCv.height = camPv.videoHeight; drawSkeleton(); }
+                    if (!skCv.width) requestAnimationFrame(waitVideo);
+                };
+                waitVideo();
+                setHint('🖐 动态灵敏度 · 物理弹簧惯性', 4000);
+                fpsTime = performance.now();
+            } catch (e) {
+                ls.style.display = 'none'; sb.style.display = 'block';
+                em.textContent = '❌ ' + (e.message || e); em.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>

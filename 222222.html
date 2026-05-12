@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>彩虹粒子球 · 优化版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #080610;
+            font-family: 'Segoe UI', system-ui, sans-serif
+        }
+
+        canvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%
+        }
+
+        #cam {
+            position: fixed;
+            width: 0;
+            height: 0;
+            opacity: 0
+        }
+
+        #pw {
+            position: fixed;
+            right: 12px;
+            bottom: 12px;
+            width: 140px;
+            height: 105px;
+            border-radius: 8px;
+            overflow: hidden;
+            z-index: 7;
+            opacity: 0;
+            transition: opacity .4s;
+            border: 1px solid rgba(255, 255, 255, .05)
+        }
+
+        #pw.show {
+            opacity: 1
+        }
+
+        #pw video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            display: block
+        }
+
+        #pw canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            transform: scaleX(-1)
+        }
+
+        #tcCam {
+            position: fixed;
+            right: 12px;
+            bottom: 12px;
+            z-index: 8;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, .35);
+            border: 1px solid rgba(255, 255, 255, .05);
+            color: rgba(255, 255, 255, .3);
+            font-size: 13px;
+            cursor: pointer;
+            display: none;
+            text-align: center;
+            line-height: 32px
+        }
+
+        #st {
+            position: fixed;
+            top: 10px;
+            right: 12px;
+            z-index: 5;
+            font: 11px monospace;
+            color: rgba(255, 255, 255, .15);
+            text-align: right;
+            pointer-events: none;
+            line-height: 1.5
+        }
+
+        #hint {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            padding: 8px 18px;
+            background: rgba(0, 0, 0, .35);
+            border: 1px solid rgba(255, 255, 255, .04);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, .4);
+            font-size: 11px;
+            white-space: nowrap;
+            pointer-events: none;
+            transition: opacity .5s;
+            opacity: 1
+        }
+
+        #hint.fade {
+            opacity: 0
+        }
+
+        #ov {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at center, rgba(20, 10, 40, .55), rgba(5, 5, 15, .88));
+            backdrop-filter: blur(10px);
+            transition: opacity .5s
+        }
+
+        #ov.hide {
+            opacity: 0;
+            pointer-events: none
+        }
+
+        .card {
+            text-align: center;
+            padding: 32px 36px;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .05);
+            border-radius: 20px;
+            max-width: 380px;
+            width: 84%;
+            animation: in .5s ease
+        }
+
+        @keyframes in {
+            from {
+                opacity: 0;
+                transform: translateY(18px) scale(.97)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1)
+            }
+        }
+
+        .card h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f093fb, #f5576c, #4facfe, #43e97b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px
+        }
+
+        .card p {
+            color: rgba(255, 255, 255, .3);
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 18px
+        }
+
+        .btn-s {
+            padding: 10px 36px;
+            font-size: 13px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(245, 87, 108, .2)
+        }
+
+        .btn-s:hover {
+            transform: translateY(-1px) scale(1.02)
+        }
+
+        #ls {
+            display: none;
+            margin-top: 12px;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px
+        }
+
+        .sp {
+            width: 22px;
+            height: 22px;
+            border: 2px solid rgba(255, 255, 255, .04);
+            border-top-color: #f093fb;
+            border-radius: 50%;
+            animation: sp .7s linear infinite
+        }
+
+        @keyframes sp {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        #em {
+            display: none;
+            margin-top: 10px;
+            padding: 8px 12px;
+            color: #ff6b8a;
+            font-size: 11px;
+            background: rgba(255, 107, 138, .06);
+            border-radius: 8px;
+            line-height: 1.5
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="cv"></canvas>
+    <video id="cam" playsinline></video>
+    <div id="pw"><video id="camPv" playsinline autoplay></video><canvas id="skCv"></canvas></div>
+    <div id="tcCam">📷</div>
+    <div id="st">启动…</div>
+    <div id="hint">🖐 手掌控制 · 🖱 滚轮调距</div>
+    <div id="ov">
+        <div class="card">
+            <h1>✦ 彩虹粒子球</h1>
+            <p>5000 粒子 · GPU 加速<br>手腕位置映射 · 释放惯性</p>
+            <button class="btn-s" id="startBtn">🚀 启动</button>
+            <div id="ls">
+                <div class="sp"></div><span style="color:rgba(255,255,255,.3);font-size:11px" id="ll">准备…</span>
+            </div>
+            <div id="em"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js"
+        crossorigin></script>
+    <script
+        type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        // ──────────────── 工具 ────────────────
+        const $ = id => document.getElementById(id);
+        const P = Math;
+
+        // 1€ 滤波器 (用于平滑手腕点及手掌尺寸)
+        class EF {
+            constructor(m = 1.2, b = 0.007, d = 1) {
+                this.m = m; this.b = b; this.d = d;
+                this.pv = null; this.pd = null; this.pt = null;
+            }
+            f(v, t) {
+                if (this.pv === null) { this.pv = v; this.pd = 0; this.pt = t; return v; }
+                const dt = (t - this.pt) / 1000; if (dt <= 0) return this.pv;
+                const dv = (v - this.pv) / dt;
+                const aD = 1 / (1 + 1 / (6.28 * this.d) / dt);
+                const fd = this.pd + aD * (dv - this.pd);
+                const fc = this.m + this.b * P.abs(fd);
+                const a = 1 / (1 + 1 / (6.28 * fc) / dt);
+                const fv = this.pv + a * (v - this.pv);
+                this.pv = fv; this.pd = fd; this.pt = t; return fv;
+            }
+            r(v, t) { this.pv = v; this.pd = 0; this.pt = t; return v; }
+        }
+
+        // ──────────────── DOM ────────────────
+        const canvas = $('cv'), st = $('st'), hint = $('hint'), ov = $('ov'), sb = $('startBtn');
+        const ls = $('ls'), ll = $('ll'), em = $('em'), tc = $('tcCam'), pw = $('pw');
+        const cam = $('cam'), camPv = $('camPv'), skCv = $('skCv'), skC = skCv.getContext('2d');
+
+        // ──────────────── 全局状态 ────────────────
+        let rotY = 0, rotX = 0, scaleV = 1, autoRotY = 0;
+        let camDist = 7.5;
+        const R = 2.8;
+        let ptCount = 5000;
+        let fps = 60;
+        let frameCount = 0, fpsTime = 0;
+        let prevL = null, wasO = false;
+        let handModel, camera;
+        let grp = new THREE.Group();
+
+        // 手势控制状态
+        let gs = { a: false, rs: 0, rsc: 1, rcx: 0, rcy: 0, rry: 0, rrx: 0 };
+        const fX = new EF(1.8, 0.005, 1);   // 手腕X（快速响应）
+        const fY = new EF(1.8, 0.005, 1);
+        const fS = new EF(0.9, 0.01, 1);    // 手掌尺寸（更稳定）
+        let ht = null;
+        let lastUpd = 0;
+
+        // 惯性数据
+        let idleOmega = 0;           // 水平惯量
+        let idleRotVelX = 0;        // 垂直旋转残余速度
+        const HIST_LEN = 5;
+        const histDx = [];
+        const DAMP = 0.92;
+        const AUTO_SPIN = 0.002;
+
+        // ──────────────── Three.js 场景 ────────────────
+        let scene, cam3d, renderer, particleSystem, geo, colorAttr, huesArr;
+
+        function initThree() {
+            renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0);
+
+            scene = new THREE.Scene();
+            cam3d = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 50);
+            cam3d.position.set(0, 0, camDist);
+            cam3d.lookAt(0, 0, 0);
+
+            // 创建粒子几何体
+            buildGeometry(ptCount);
+
+            // 圆形颗粒纹理
+            const cvs = document.createElement('canvas');
+            cvs.width = 32; cvs.height = 32;
+            const ctx = cvs.getContext('2d');
+            const g = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+            g.addColorStop(0, 'rgba(255,255,255,1)');
+            g.addColorStop(0.5, 'rgba(255,255,255,0.7)');
+            g.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, 32, 32);
+            const tex = new THREE.CanvasTexture(cvs);
+
+            const mat = new THREE.PointsMaterial({
+                size: 0.15,
+                map: tex,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.92,
+            });
+
+            particleSystem = new THREE.Points(geo, mat);
+            grp = new THREE.Group();
+            grp.add(particleSystem);
+            scene.add(grp);
+        }
+
+        function buildGeometry(count) {
+            geo = new THREE.BufferGeometry();
+            const positions = new Float32Array(count * 3);
+            const colors = new Float32Array(count * 3);
+            huesArr = new Float32Array(count);
+
+            for (let i = 0; i < count; i++) {
+                const theta = P.random() * P.PI * 2;
+                const phi = P.acos(2 * P.random() - 1);
+                const r = R * (0.92 + P.random() * 0.08);
+                const x = r * P.sin(phi) * P.cos(theta);
+                const y = r * P.cos(phi);
+                const z = r * P.sin(phi) * P.sin(theta);
+                positions[i * 3] = x;
+                positions[i * 3 + 1] = y;
+                positions[i * 3 + 2] = z;
+                huesArr[i] = (P.atan2(z, x) / P.PI * 180 + phi * 30) % 360;
+            }
+
+            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            colorAttr = geo.attributes.color;
+        }
+
+        // 更新粒子颜色（CPU 更新，5000 粒子无压力）
+        let timeAcc = 0;
+        function updateColors(dt) {
+            const colors = colorAttr.array;
+            timeAcc += dt * 0.02;
+            for (let i = 0; i < ptCount; i++) {
+                const hue = (huesArr[i] + timeAcc * 120) % 360;
+                const [r, g, b] = hsv2rgb(hue, 0.9, 0.7);
+                colors[i * 3] = r / 255;
+                colors[i * 3 + 1] = g / 255;
+                colors[i * 3 + 2] = b / 255;
+            }
+            colorAttr.needsUpdate = true;
+        }
+
+        function hsv2rgb(h, s, v) {
+            h = ((h % 360) + 360) % 360;
+            const f = h / 60, hi = Math.floor(f) % 6, ff = f - Math.floor(f);
+            const p = v * (1 - s), q = v * (1 - s * ff), t = v * (1 - s * (1 - ff));
+            let r, g, b;
+            if (hi === 0) { r = v; g = t; b = p; }
+            else if (hi === 1) { r = q; g = v; b = p; }
+            else if (hi === 2) { r = p; g = v; b = t; }
+            else if (hi === 3) { r = p; g = q; b = v; }
+            else if (hi === 4) { r = t; g = p; b = v; }
+            else { r = v; g = p; b = q; }
+            return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
+        }
+
+        // 动态调整粒子数量
+        function adjustCount() {
+            if (fps < 45 && ptCount > 2000) {
+                ptCount = Math.max(2000, ptCount - 500);
+                rebuild();
+            } else if (fps > 55 && ptCount < 8000) {
+                ptCount = Math.min(8000, ptCount + 500);
+                rebuild();
+            }
+        }
+
+        function rebuild() {
+            buildGeometry(ptCount);
+            particleSystem.geometry = geo;
+        }
+
+        // ──────────────── 手势识别 ────────────────
+        function isOpen(lm) {
+            let e = 0, sp = 0;
+            const ti = [8, 12, 16, 20], pi = [7, 11, 15, 19];
+            for (let i = 0; i < 4; i++) {
+                const d1 = P.hypot(lm[ti[i]].x - lm[0].x, lm[ti[i]].y - lm[0].y);
+                const d2 = P.hypot(lm[pi[i]].x - lm[0].x, lm[pi[i]].y - lm[0].y);
+                if (d1 > d2 * 1.06) e++;
+            }
+            for (let i = 0; i < 3; i++) sp += P.hypot(lm[ti[i]].x - lm[ti[i + 1]].x, lm[ti[i]].y - lm[ti[i + 1]].y);
+            return e >= 3 && sp / 3 > 0.03;
+        }
+
+        function onHands(results) {
+            const l = results.multiHandLandmarks || [];
+            // 手部消失：重置状态
+            if (!l.length) {
+                prevL = null;
+                if (wasO) {
+                    wasO = false;
+                    gs.a = false;
+                    setHint('🖐 张开手掌控制', 3000);
+                }
+                return;
+            }
+
+            prevL = l[0];
+            const open = isOpen(l[0]);
+            if (!open) {
+                if (wasO) {
+                    wasO = false;
+                    gs.a = false;
+                    setHint('🖐 张开手掌控制', 3000);
+                }
+                return;
+            }
+
+            // 使用手腕点（更稳定）
+            const cx = l[0][0].x;
+            const cy = l[0][0].y;
+            const sp = P.hypot(l[0][12].x - l[0][0].x, l[0][12].y - l[0][0].y);
+            const nw = performance.now();
+
+            if (!gs.a) {
+                // 激活手势
+                gs.a = true; wasO = true;
+                gs.rs = sp; gs.rsc = scaleV;
+                gs.rcx = cx; gs.rcy = cy;
+                gs.rry = autoRotY; gs.rrx = rotX;
+                fS.r(sp, nw); fX.r(cx, nw); fY.r(cy, nw);
+                lastUpd = nw;
+                histDx.length = 0;
+                setHint('🖐 控制中', 0);
+            } else {
+                const dt = Math.min(0.1, (nw - lastUpd) / 1000);
+                if (dt <= 0) return;
+                lastUpd = nw;
+
+                const fs = fS.f(sp, nw);
+                const fcx = fX.f(cx, nw);
+                const fcy = fY.f(cy, nw);
+
+                // 缩放：位置映射，非线性
+                scaleV = P.max(0.15, P.min(8, gs.rsc * P.pow(fs / gs.rs, 1.6)));
+
+                // 旋转：手腕偏移直接映射角度
+                const dx = (fcx - gs.rcx);
+                const dy = (fcy - gs.rcy);
+                const dXEff = P.abs(dx) > 0.003 ? (dx - P.sign(dx) * 0.003) : 0;
+                const dYEff = P.abs(dy) > 0.003 ? (dy - P.sign(dy) * 0.003) : 0;
+                rotY = gs.rry + dXEff * 4.0;
+                rotX = P.max(-1.5, P.min(1.5, gs.rrx + dYEff * 2.5));
+                autoRotY = rotY;
+
+                // 记录水平位移用于惯性
+                histDx.push({ dx: dXEff, dt });
+                if (histDx.length > HIST_LEN) histDx.shift();
+            }
+        }
+
+        function releaseInertia() {
+            // 根据最近几帧的位移变化计算惯性角速度
+            if (histDx.length >= 2) {
+                const last = histDx[histDx.length - 1];
+                const first = histDx[0];
+                const totalDt = histDx.reduce((s, x) => s + x.dt, 0) || 0.016;
+                const avgDx = (last.dx - first.dx) / totalDt;
+                idleOmega = P.max(-2, P.min(2, avgDx * 4.0));
+            } else {
+                idleOmega = 0;
+            }
+            idleRotVelX = 0;
+        }
+
+        // ──────────────── 骨架预览 ────────────────
+        const SC = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [0, 9], [9, 10], [10, 11], [11, 12], [0, 13], [13, 14], [14, 15], [15, 16], [0, 17], [17, 18], [18, 19], [19, 20], [5, 9], [9, 13], [13, 17]];
+        function drawSkeleton() {
+            const w = skCv.width, h = skCv.height;
+            skC.clearRect(0, 0, w, h);
+            if (!prevL) {
+                skC.fillStyle = 'rgba(255,255,255,0.25)';
+                skC.font = '13px system-ui';
+                skC.textAlign = 'center';
+                skC.fillText('等待手势...', w / 2, h / 2 - 4);
+                return;
+            }
+            const l = prevL;
+            for (const [i, j] of SC) {
+                skC.beginPath();
+                skC.moveTo(l[i].x * w, l[i].y * h);
+                skC.lineTo(l[j].x * w, l[j].y * h);
+                skC.strokeStyle = `hsla(${i * 12 + 200},90%,65%,0.5)`;
+                skC.lineWidth = 1.5;
+                skC.stroke();
+            }
+            for (let i = 0; i < 21; i++) {
+                const isTip = [4, 8, 12, 16, 20].includes(i);
+                skC.beginPath();
+                skC.arc(l[i].x * w, l[i].y * h, isTip ? 4 : 2.5, 0, P.PI * 2);
+                skC.fillStyle = `hsl(${i * 13 + 200},90%,65%)`;
+                skC.fill();
+                if (isTip) {
+                    skC.beginPath();
+                    skC.arc(l[i].x * w, l[i].y * h, 1.5, 0, P.PI * 2);
+                    skC.fillStyle = '#fff';
+                    skC.fill();
+                }
+            }
+        }
+
+        // ──────────────── UI 辅助 ────────────────
+        function setHint(t, d) {
+            hint.textContent = t;
+            hint.classList.remove('fade');
+            clearTimeout(ht);
+            if (d > 0) ht = setTimeout(() => hint.classList.add('fade'), d);
+        }
+
+        let camVis = false;
+        tc.addEventListener('click', () => {
+            camVis = !camVis;
+            pw.classList.toggle('show', camVis);
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'c') tc.click(); });
+        window.addEventListener('resize', () => {
+            if (renderer) {
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                cam3d.aspect = window.innerWidth / window.innerHeight;
+                cam3d.updateProjectionMatrix();
+            }
+        });
+        window.addEventListener('wheel', e => {
+            e.preventDefault();
+            camDist = Math.max(2.5, Math.min(20, camDist + e.deltaY * 0.008));
+        }, { passive: false });
+
+        // ──────────────── 主循环 ────────────────
+        function animate(ts) {
+            frameCount++;
+            const dt = Math.min(0.05, (ts - lastFrame) / 1000 || 0.016);
+            lastFrame = ts;
+
+            if (frameCount % 30 === 0) {
+                const n = performance.now();
+                if (fpsTime) fps = Math.round(30000 / (n - fpsTime));
+                fpsTime = n;
+                st.textContent = `${fps}FPS | ${ptCount}粒`;
+                adjustCount();
+            }
+
+            // 无手势时：惯性 + 自动旋转
+            if (!gs.a) {
+                // 水平惯性
+                if (Math.abs(idleOmega) > 0.001) {
+                    rotY += idleOmega * dt * 60;
+                    autoRotY = rotY;
+                    idleOmega *= Math.pow(DAMP, dt * 60);
+                } else {
+                    idleOmega = 0;
+                    autoRotY += AUTO_SPIN;
+                    rotY = autoRotY;
+                }
+                // 垂直惯性
+                if (Math.abs(idleRotVelX) > 0.0001) {
+                    rotX += idleRotVelX * dt * 60;
+                    idleRotVelX *= Math.pow(DAMP, dt * 60);
+                } else {
+                    idleRotVelX = 0;
+                    rotX += 0.0003;
+                }
+                // 缩放回归默认
+                if (Math.abs(scaleV - 1) > 0.005) scaleV += (1 - scaleV) * 0.02;
+            }
+
+            // 将变换应用到粒子组
+            grp.rotation.set(rotX * 0.35, rotY, 0);
+            grp.scale.set(scaleV, scaleV, scaleV);
+
+            cam3d.position.z = camDist;
+
+            updateColors(dt);
+            drawSkeleton();
+            renderer.render(scene, cam3d);
+
+            requestAnimationFrame(animate);
+        }
+
+        let lastFrame = 0;
+
+        // ──────────────── 启动按钮 ────────────────
+        sb.addEventListener('click', async () => {
+            sb.style.display = 'none';
+            ls.style.display = 'flex';
+            ll.textContent = '初始化 GPU…';
+            em.style.display = 'none';
+
+            try {
+                initThree();
+                // 立即显示粒子，不等待摄像头
+                requestAnimationFrame(animate);
+                ov.classList.add('hide');
+                ll.textContent = '加载手势…';
+
+                handModel = new Hands({
+                    locateFile: f => 'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/' + f
+                });
+                handModel.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.7,
+                    minTrackingConfidence: 0.5
+                });
+                handModel.onResults(onHands);
+
+                camera = new Camera(cam, {
+                    onFrame: async () => { if (handModel) await handModel.send({ image: cam }); },
+                    width: 640,
+                    height: 480
+                });
+                await camera.start();
+
+                tc.style.display = 'block';
+                camPv.srcObject = cam.srcObject;
+                camPv.play();
+                pw.classList.add('show');
+
+                const waitVideo = () => {
+                    if (camPv.readyState >= 2) {
+                        skCv.width = camPv.videoWidth;
+                        skCv.height = camPv.videoHeight;
+                        drawSkeleton();
+                    }
+                    if (!skCv.width) requestAnimationFrame(waitVideo);
+                };
+                waitVideo();
+
+                setHint('🖐 手腕位置控制 · 🖱 滚轮调距', 4000);
+                fpsTime = performance.now();
+            } catch (e) {
+                ls.style.display = 'none';
+                sb.style.display = 'block';
+                em.textContent = '❌ ' + (e.message || e);
+                em.style.display = 'block';
+                // 即使摄像头失败，动画已运行，粒子可见
+            }
+        });
+    </script>
+</body>
+
+</html>
