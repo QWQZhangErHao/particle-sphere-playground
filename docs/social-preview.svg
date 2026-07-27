@@ -1,0 +1,38 @@
+<svg width="1280" height="640" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="70%" cy="40%" r="50%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#6366f1;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <circle cx="900" cy="280" r="200" fill="url(#glow)"/>
+  <circle cx="900" cy="280" r="120" fill="none" stroke="#6366f1" stroke-width="0.5" opacity="0.3"/>
+  <circle cx="900" cy="280" r="80" fill="none" stroke="#8b5cf6" stroke-width="0.5" opacity="0.4"/>
+  <circle cx="900" cy="280" r="40" fill="none" stroke="#a78bfa" stroke-width="0.5" opacity="0.5"/>
+  <circle cx="850" cy="240" r="3" fill="#818cf8" opacity="0.8"/>
+  <circle cx="940" cy="220" r="2" fill="#a78bfa" opacity="0.6"/>
+  <circle cx="880" cy="310" r="2.5" fill="#6366f1" opacity="0.7"/>
+  <circle cx="960" cy="290" r="3" fill="#c4b5fd" opacity="0.5"/>
+  <circle cx="830" cy="270" r="2" fill="#818cf8" opacity="0.9"/>
+  <rect x="0" y="0" width="8" height="640" fill="#a78bfa"/>
+  <text x="80" y="140" font-size="64" fill="#a78bfa" font-family="system-ui">🌈</text>
+  <text x="80" y="240" font-size="52" font-weight="bold" fill="white" font-family="system-ui">Particle Sphere</text>
+  <text x="80" y="290" font-size="24" fill="#94a3b8" font-family="system-ui">Interactive WebGL Creative Coding Collection</text>
+  <text x="80" y="325" font-size="18" fill="#64748b" font-family="system-ui">GPU-accelerated real-time particle systems with Three.js</text>
+  <rect x="80" y="360" width="100" height="32" rx="16" fill="#a78bfa" opacity="0.2"/>
+  <text x="130" y="381" font-size="14" fill="#c4b5fd" font-family="system-ui" text-anchor="middle">Three.js</text>
+  <rect x="192" y="360" width="100" height="32" rx="16" fill="#a78bfa" opacity="0.2"/>
+  <text x="242" y="381" font-size="14" fill="#c4b5fd" font-family="system-ui" text-anchor="middle">WebGL</text>
+  <rect x="304" y="360" width="100" height="32" rx="16" fill="#a78bfa" opacity="0.2"/>
+  <text x="354" y="381" font-size="14" fill="#c4b5fd" font-family="system-ui" text-anchor="middle">JavaScript</text>
+  <text x="80" y="450" font-size="18" fill="#64748b" font-family="system-ui">✦ 6 versions from basic to physics simulation</text>
+  <text x="80" y="480" font-size="18" fill="#64748b" font-family="system-ui">✦ GPU-accelerated rendering</text>
+  <text x="80" y="510" font-size="18" fill="#64748b" font-family="system-ui">✦ Self-contained HTML — open in browser, it just works</text>
+  <text x="1200" y="90" text-anchor="end" font-size="18" fill="#475569" font-family="system-ui">github.com/QWQZhangErHao</text>
+  <text x="1200" y="120" text-anchor="end" font-size="14" fill="#475569" font-family="system-ui">QWQZhangErHao/particle-sphere-playground</text>
+</svg>
