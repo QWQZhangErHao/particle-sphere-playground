@@ -1,94 +1,66 @@
-# 🌈 Particle Sphere Playground
+<div align="center">
+  <br/>
+  <h1>🌈 Particle Sphere Playground · 粒子球游乐场</h1>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Three.js-r160-000000?logo=threedotjs" alt="Three.js">
-  <img src="https://img.shields.io/badge/WebGL-2.0-990000?logo=webgl" alt="WebGL">
-  <img src="https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?logo=javascript" alt="JavaScript">
-  <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
-  <a href="https://qwqzhangerhao.github.io/particle-sphere-playground"><img src="https://img.shields.io/badge/Live%20Demo-2ea44f?logo=githubpages" alt="Live Demo"></a>
-</p>
+  <p><strong>Interactive WebGL Creative Coding Collection · 交互式 WebGL 创意编程合集</strong></p>
 
-<p align="center">
-  <b>Rainbow Particle Sphere — Interactive WebGL Creative Coding Collection</b><br>
-  GPU-accelerated real-time particle systems built with Three.js
-</p>
+  <p>
+    <img src="https://img.shields.io/badge/Three.js-r160-000000?logo=threedotjs" alt="Three.js">
+    <img src="https://img.shields.io/badge/WebGL-2.0-990000?logo=webgl" alt="WebGL">
+    <img src="https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?logo=javascript" alt="JavaScript">
+    <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
+    <a href="https://qwqzhangerhao.github.io/particle-sphere-playground"><img src="https://img.shields.io/badge/Live%20Demo-2ea44f?logo=githubpages" alt="Live Demo"></a>
+  </p>
 
-<p align="center">
-  <a href="#-live-demos"><b>🎮 Play Now</b></a> ·
-  <a href="#-versions"><b>📖 Versions</b></a> ·
-  <a href="#-quick-start"><b>⚡ Quick Start</b></a>
-</p>
+  <p>
+    <a href="#-live-demos"><b>Play Now 立即体验</b></a> ·
+    <a href="#-versions"><b>Versions 版本</b></a> ·
+    <a href="#-quick-start"><b>Quick Start 快速开始</b></a>
+  </p>
+</div>
 
 ---
 
-A collection of **interactive 3D particle spheres** showing different visual styles and effects — from basic GPU rendering to physics simulation and hand-tracking interaction. Each file is a self-contained HTML page; open it in any browser and it just works.
+GPU-accelerated real-time particle systems built with Three.js. A collection of interactive 3D particle spheres showing different visual styles and effects — from basic GPU rendering to physics simulation and hand-tracking interaction.
 
-## 🎮 Live Demos
+基于 Three.js 构建的 GPU 加速实时粒子系统合集。展示了不同视觉风格和效果的交互式 3D 粒子球 — 从基础 GPU 渲染到物理模拟和手势追踪交互。
 
-| Version | Play | Description |
-|---------|:----:|-------------|
-| **Basic** | [▶ Play](https://qwqzhangerhao.github.io/particle-sphere-playground/v1-basic.html) | Foundational GPU particle sphere with hue gradient |
-| **Optimized** | [▶ Play](https://qwqzhangerhao.github.io/particle-sphere-playground/v2-optimized.html) | Performance-tuned, higher frame rates |
-| **Interactive** | [▶ Play](https://qwqzhangerhao.github.io/particle-sphere-playground/v3-interactive.html) | Mouse hover/click interaction, dynamic particles |
-| **Enhanced** | [▶ Play](https://qwqzhangerhao.github.io/particle-sphere-playground/v4-enhanced.html) | High-contrast colors, large particles, better visibility |
-| **Physics** | [▶ Play](https://qwqzhangerhao.github.io/particle-sphere-playground/v5-physics.html) | Soft-body physics, gravity, spring connections |
-| **Stable** | [▶ Play](https://qwqzhangerhao.github.io/particle-sphere-playground/v6-stable.html) | Memory-safe, mobile-friendly, long-run stable |
-| **Diagnostics** | [▶ Play](https://qwqzhangerhao.github.io/particle-sphere-playground/diagnostics.html) | FPS monitor, GPU stats, performance analysis |
+Each file is a self-contained HTML page; open it in any browser and it just works.
 
-## 🚀 Quick Start
+每个文件都是独立的 HTML 页面，在任何浏览器中打开即可运行。
 
-Clone and open any file directly:
+---
 
-```bash
+## 🎮 Live Demos · 在线演示
+
+| Version 版本 | Play 体验 | Description 说明 |
+|:-----------:|:---------:|-----------------|
+| **Basic 基础版** | [▶ Play](https://qwqzhangerhao.github.io/particle-sphere-playground/v1-basic.html) | Foundational GPU particle sphere with hue gradient / 基础 GPU 粒子球，色相渐变 |
+| **Optimized 优化版** | [▶ Play](https://qwqzhangerhao.github.io/particle-sphere-playground/v2-optimized.html) | BufferGeometry optimization, improved performance / BufferGeometry 优化，性能提升 |
+| **Interactive 交互版** | [▶ Play](https://qwqzhangerhao.github.io/particle-sphere-playground/v3-interactive.html) | Mouse interaction — click to burst, drag to rotate / 鼠标交互 — 点击爆散，拖拽旋转 |
+| **Enhanced 增强版** | [▶ Play](https://qwqzhangerhao.github.io/particle-sphere-playground/v4-enhanced.html) | Multi-color palettes, dynamic size variation / 多色调色板，动态大小变化 |
+| **Physics 物理版** | [▶ Play](https://qwqzhangerhao.github.io/particle-sphere-playground/v5-physics.html) | Simple gravity simulation with particle restitution / 简单重力模拟，粒子回弹 |
+| **Stable 稳定版** | [▶ Play](https://qwqzhangerhao.github.io/particle-sphere-playground/v6-stable.html) | Refined interaction, stable performance, recommended / 优化交互，性能稳定，推荐版本 |
+
+---
+
+## 🚀 Quick Start · 快速开始
+
+\`\`\`bash
+# Clone / 克隆
 git clone https://github.com/QWQZhangErHao/particle-sphere-playground.git
 cd particle-sphere-playground
 
-# Open a file directly (no server needed)
-open v1-basic.html          # macOS
-start v1-basic.html         # Windows
-xdg-open v1-basic.html      # Linux
+# Open any HTML file in your browser / 在浏览器中打开任意 HTML 文件
+# No build step required / 无需构建
+\`\`\`
 
-# Or serve locally
-python -m http.server 8080
-# http://localhost:8080/v1-basic.html
-```
+Or just click the Play links above — the live demos run directly on GitHub Pages.
 
-## 📖 Versions
-
-Each version builds on the previous one, adding new features and refinement:
-
-| Version | File | Particles | FPS | Highlight |
-|---------|------|:---------:|:---:|-----------|
-| **v1 Basic** | [`v1-basic.html`](v1-basic.html) | 10,000 | 30-45 | First particle sphere, HSL hue mapping, rotation |
-| **v2 Optimized** | [`v2-optimized.html`](v2-optimized.html) | 15,000 | 55-60 | BufferGeometry, reduced draw calls (~3× faster) |
-| **v3 Interactive** | [`v3-interactive.html`](v3-interactive.html) | 12,000 | 50-60 | Mouse hover/click ripple, particle attraction |
-| **v4 Enhanced** | [`v4-enhanced.html`](v4-enhanced.html) | 8,000 | 60 | High contrast, larger particles, screen-friendly |
-| **v5 Physics** | [`v5-physics.html`](v5-physics.html) | 10,000 | 45-55 | Soft-body collision, springs, wind & gravity |
-| **v6 Stable** | [`v6-stable.html`](v6-stable.html) | 12,000 | 55-60 | Memory-safe, responsive, mobile-ready |
-| **Diagnostics** | [`diagnostics.html`](diagnostics.html) | — | — | FPS chart, GPU memory, performance counters |
-
-## ✨ Features
-
-- **GPU-accelerated** — All particle rendering offloaded to WebGL
-- **6 evolving versions** — From basic to physics simulation, showing progressive enhancement
-- **Zero dependencies to run** — Just open an HTML file in a modern browser
-- **Interactive** — Mouse drag to rotate, hover for particle effects, click for ripples (v3+)
-- **Live diagnostics** — Built-in performance monitoring and FPS tracking
-
-## 🧰 Tech Stack
-
-- [Three.js r160](https://threejs.org/) — WebGL 3D rendering engine
-- Custom GLSL shaders for particle effects
-- `BufferGeometry` for efficient vertex processing
-- `requestAnimationFrame` animation loop
-- ES6 modules via import maps
-
-## 📄 License
-
-[MIT](LICENSE)
+或直接点击上方的 Play 链接 — 在线演示直接在 GitHub Pages 上运行。
 
 ---
 
-<p align="center">
-  <sub>Creative coding with Three.js & WebGL · Inspired by the beauty of particle systems</sub>
-</p>
+## 📄 License · 许可
+
+MIT
